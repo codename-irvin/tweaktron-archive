@@ -1,7 +1,8 @@
 #!/bin/python3
 
 import subprocess
-import sys
+import queue
+import threading
 
 # Prompting utilities:
 def bold(text):
@@ -25,7 +26,57 @@ def prompt(msg, choices):
         if validate_input(response, choices):
             return response
 
+def listen(out, q):
+    for line in out:
+        q.put(line)
+
+    out.close()
+
 # Tweaks:
+def set_timezone():
+    choices = ["y", "n"]
+    msg = "Change timezone"       
+    response = prompt(msg, choices)
+    if response == "y":
+        tzprocess = subprocess.Popen("tzselect",
+                                     stdin=subprocess.PIPE,
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.STDOUT,
+                                     bufsize=1,
+                                     universal_newlines = True)
+        q = queue.Queue()
+        t = threading.Thread(target=listen, args=(tzprocess.stdout, q))
+        t.daemon = True
+        t.start()
+        menu_option = 0
+        while tzprocess.returncode == None:
+            try:
+                if menu_option < 3:
+                    while True:
+                        line = q.get(timeout=0.1)  
+                        print(line[:-1])
+                elif menu_option == 3:
+                        line = q.get(timeout=0.1)
+                elif menu_option == 4:
+                    choice = q.get(timeout=0.1)  
+                    print("Setting timezone: " + choice.strip()[3:])
+                    subprocess.run("timedatectl set-timezone America/New_York --no-ask-password")
+                    break   
+
+            except queue.Empty:
+                if menu_option < 3:
+                    selection = input(blue("? "))
+                    tzprocess.stdin.write(selection + "\n")
+                    tzprocess.stdin.flush()
+                elif menu_option == 3:
+                    tzprocess.stdin.write("1\n")
+                    tzprocess.stdin.flush()
+
+                menu_option += 1
+
+            tzprocess.poll()
+        tzprocess.kill()
+
 def enable_performance_overlay():
     choices = ["y", "n"]
     msg = "Enable performance overlay (MangoHud)"       
@@ -35,6 +86,7 @@ def enable_performance_overlay():
     else:
         subprocess.run("mangohudctl set no_display 1")
 
-
 if __name__ == "__main__":
+    set_timezone()
     enable_performance_overlay()
+   
