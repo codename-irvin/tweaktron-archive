@@ -1,0 +1,37 @@
+#!/bin/python3
+
+import subprocess
+import sys
+
+def bold(text):
+    return "\033[1m" + text + "\033[0m"
+
+def red(text):
+    return "\033[31m" + text + "\033[0m"
+
+def blue(text):
+    return "\033[34m" + text + "\033[0m"
+
+def validate_input(inp, choices):
+    valid = inp in choices
+    if not valid:
+        print(red("!") + " Invalid input.", inp, "not in ", choices)   
+    return valid
+
+def prompt(msg, choices):
+    while True:
+        response = input(blue("?") + " " + msg + " [" + ", ".join(choices) + "]: ")
+        if validate_input(response, choices):
+            return response
+
+def enable_performance_overlay():
+    choices = ["y", "n"]
+    msg = "Enable performance overlay (MangoHud)"       
+    response = prompt(msg, choices)
+    if response == "y":
+        subprocess.run("mangohudctl set no_display 0")
+    else:
+        subprocess.run("mangohudctl set no_display 1")
+
+
+enable_performance_overlay()   
