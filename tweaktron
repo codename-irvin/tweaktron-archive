@@ -3,6 +3,7 @@
 import subprocess
 import sys
 
+# Prompting utilities:
 def bold(text):
     return "\033[1m" + text + "\033[0m"
 
@@ -24,6 +25,7 @@ def prompt(msg, choices):
         if validate_input(response, choices):
             return response
 
+# Tweaks:
 def enable_performance_overlay():
     choices = ["y", "n"]
     msg = "Enable performance overlay (MangoHud)"       
@@ -34,4 +36,5 @@ def enable_performance_overlay():
         subprocess.run("mangohudctl set no_display 1")
 
 
-enable_performance_overlay()   
+if __name__ == "__main__":
+    enable_performance_overlay()
