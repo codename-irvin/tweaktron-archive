@@ -58,10 +58,10 @@ def set_timezone():
                 elif menu_option == 3:
                         line = q.get(timeout=0.1)
                 elif menu_option == 4:
-                    choice = q.get(timeout=0.1)  
-                    print("Setting timezone: " + choice.strip()[3:])
-                    subprocess.run("timedatectl set-timezone America/New_York --no-ask-password")
-                    break   
+                    choice = q.get(timeout=0.1).strip()[3:]
+                    print("Setting timezone: " + choice)
+                    subprocess.run(["timedatectl", "set-timezone", choice, "--no-ask-password"])
+                    break
 
             except queue.Empty:
                 if menu_option < 3:
