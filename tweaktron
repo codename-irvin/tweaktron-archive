@@ -3,28 +3,15 @@
 import subprocess
 import queue
 import threading
+import sys
+import re
 
 # Prompting utilities:
-def bold(text):
-    return "\033[1m" + text + "\033[0m"
-
 def red(text):
     return "\033[31m" + text + "\033[0m"
 
 def blue(text):
     return "\033[34m" + text + "\033[0m"
-
-def validate_input(inp, choices):
-    valid = inp in choices
-    if not valid:
-        print(red("!") + " Invalid input.", inp, "not in ", choices)   
-    return valid
-
-def prompt(msg, choices):
-    while True:
-        response = input(blue("?") + " " + msg + " [" + ", ".join(choices) + "]: ")
-        if validate_input(response, choices):
-            return response
 
 def listen(out, q):
     for line in out:
@@ -32,61 +19,86 @@ def listen(out, q):
 
     out.close()
 
-# Tweaks:
+# Commands:
+def help():
+    print()
+    print("Usage: tweaktron [command]\n")
+    print("    help                  displays this help menu")
+    print("    set-timezone          utility for setting the timezone")
+    print("    toggle-perf-overlay   toggles the performance overlay (MangoHud)")
+    print()
+
 def set_timezone():
-    choices = ["y", "n"]
-    msg = "Change timezone"       
-    response = prompt(msg, choices)
-    if response == "y":
-        tzprocess = subprocess.Popen("tzselect",
-                                     stdin=subprocess.PIPE,
-                                     stdout=subprocess.PIPE,
-                                     stderr=subprocess.STDOUT,
-                                     bufsize=1,
-                                     universal_newlines = True)
-        q = queue.Queue()
-        t = threading.Thread(target=listen, args=(tzprocess.stdout, q))
-        t.daemon = True
-        t.start()
-        menu_option = 0
-        while tzprocess.returncode == None:
+    tzprocess = subprocess.Popen("tzselect",
+                                    stdin=subprocess.PIPE,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT,
+                                    bufsize=1,
+                                    universal_newlines = True)
+    q = queue.Queue()
+    t = threading.Thread(target=listen, args=(tzprocess.stdout, q))
+    t.daemon = True
+    t.start()
+
+    # Listen for prompts while timedatectl is running
+    while tzprocess.returncode == None:
+        # Parse the prompt from timedatectl
+        output = ""
+        while True:
             try:
-                if menu_option < 3:
-                    while True:
-                        line = q.get(timeout=0.1)  
-                        print(line[:-1])
-                elif menu_option == 3:
-                        line = q.get(timeout=0.1)
-                elif menu_option == 4:
-                    choice = q.get(timeout=0.1).strip()[3:]
-                    print("Setting timezone: " + choice)
-                    subprocess.run(["timedatectl", "set-timezone", choice, "--no-ask-password"])
-                    break
+                line = q.get(timeout=0.1)  
+                output += line
+            except:
+                break
 
-            except queue.Empty:
-                if menu_option < 3:
-                    selection = input(blue("? "))
-                    tzprocess.stdin.write(selection + "\n")
-                    tzprocess.stdin.flush()
-                elif menu_option == 3:
-                    tzprocess.stdin.write("1\n")
-                    tzprocess.stdin.flush()
+        # Intercept the confirmation prompt
+        if "Is the above information OK?" in output:
+            # Auto confirm
+            tzprocess.stdin.write("1\n")
+            tzprocess.stdin.flush()
+            
+            # Parse the timezone
+            choice = re.search("TZ='.+'", output)
+            choice = choice.group(0)[4:-1]
 
-                menu_option += 1
+            # Set the timezone
+            print("Setting timezone to " + choice + "...")
+            subprocess.run(["timedatectl", "set-timezone", choice, "--no-ask-password"], shell=True)
+            print("Done.")
 
-            tzprocess.poll()
-        tzprocess.kill()
+            break
 
-def enable_performance_overlay():
-    choices = ["y", "n"]
-    msg = "Enable performance overlay (MangoHud)"       
-    response = prompt(msg, choices)
-    if response == "y":
-        subprocess.run("mangohudctl set no_display 0")
-    else:
-        subprocess.run("mangohudctl set no_display 1")
+        # Prompt user for input
+        print(output)
+
+        selection = input(blue("? "))
+        tzprocess.stdin.write(selection + "\n")
+        tzprocess.stdin.flush()
+
+        tzprocess.poll()
+    tzprocess.kill()
+
+def toggle_performance_overlay():
+    try:
+        print("Toggling performance overlay...")
+        subprocess.run("mangohudctl toggle no_display", shell=True)
+        print("Done.")
+    except:
+        print(red("!"), "Unable to toggle performance overlay.")
 
 if __name__ == "__main__":
-    set_timezone()
-    enable_performance_overlay()
-   
+    try: 
+        command = sys.argv[1]
+        if command == "help":
+            help()
+        elif command == "set-timezone":
+            set_timezone()
+        elif command == "toggle-perf-overlay":
+            toggle_performance_overlay()
+        else:
+            print(red("!"), "Invalid command:", command)
+            print("Run \"tweaktron help\" for available commands.")
+    except IndexError as e:
+        help()
+    except Exception as e:
+        print(e)
