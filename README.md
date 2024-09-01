@@ -17,10 +17,10 @@ Tweaking utility for PlaytronOS.
     - Username: playtron
     - Password: playtron
 4. Install tweaktron
-    - wget https://tinyurl.com/2rk389ev
+    - wget https://tinyurl.com/2rk389ev     
     - chmod +x ./tweaktron
 5. Run `./tweaktron help` to see available commands
 6. Run `./tweaktron <command>` to execute a command
 7. Run whichever commands you'd like to apply various tweaks
-8. Once done, press CTRL + ALT + F1 to switch back to gaming mode or type `reboot` to reboot your system
+8. Once done, press `CTRL + ALT + F1` to switch back to gaming mode or type `reboot` to reboot your system
     - Some tweaks may require a reboot to take effect
