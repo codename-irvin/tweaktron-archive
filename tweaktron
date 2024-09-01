@@ -25,7 +25,8 @@ def help():
     print("Usage: tweaktron [command]\n")
     print("    help                  displays this help menu")
     print("    set-timezone          utility for setting the timezone")
-    print("    toggle-perf-overlay   toggles the performance overlay (MangoHud)")
+    print("    enable-perf-overlay   enables the performance overlay (MangoHud)")
+    print("    disable-perf-overlay  disables the performance overlay (MangoHud)")
     print()
 
 def set_timezone():
@@ -79,13 +80,22 @@ def set_timezone():
         tzprocess.poll()
     tzprocess.kill()
 
-def toggle_performance_overlay():
+def enable_performance_overlay():
     try:
-        print("Toggling performance overlay...")
-        subprocess.run("mangohudctl toggle no_display", shell=True)
+        print("Enabling performance overlay...")
+        subprocess.run("mangohudctl set no_display 0", shell=True)
         print("Done.")
     except:
-        print(red("!"), "Unable to toggle performance overlay.")
+        print(red("!"), "Unable to enable performance overlay.")
+
+
+def disable_performance_overlay():
+    try:
+        print("Disabling performance overlay...")
+        subprocess.run("mangohudctl set no_display 1", shell=True)
+        print("Done.")
+    except:
+        print(red("!"), "Unable to disable performance overlay.")
 
 if __name__ == "__main__":
     try: 
@@ -94,8 +104,10 @@ if __name__ == "__main__":
             help()
         elif command == "set-timezone":
             set_timezone()
-        elif command == "toggle-perf-overlay":
-            toggle_performance_overlay()
+        elif command == "enable-perf-overlay":
+            enable_performance_overlay()
+        elif command == "disable-perf-overlay":
+            disable_performance_overlay()
         else:
             print(red("!"), "Invalid command:", command)
             print("Run \"tweaktron help\" for available commands.")
