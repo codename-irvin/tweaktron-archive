@@ -46,7 +46,7 @@ def set_timezone():
         output = ""
         while True:
             try:
-                line = q.get(timeout=0.1)  
+                line = q.get(timeout=0.2)  
                 output += line
             except:
                 break
@@ -63,12 +63,13 @@ def set_timezone():
 
             # Set the timezone
             print("Setting timezone to " + choice + "...")
-            subprocess.run(["timedatectl", "set-timezone", choice, "--no-ask-password"], shell=True)
+            subprocess.run("timedatectl set-timezone " + choice, shell=True, stderr=subprocess.STDOUT)
             print("Done.")
+            print()
+            print("Reboot your device for the changes to take effect.")
 
             break
 
-        # Prompt user for input
         print(output)
 
         selection = input(blue("? "))
