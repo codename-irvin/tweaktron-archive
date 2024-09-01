@@ -17,7 +17,7 @@ Tweaking utility for PlaytronOS.
     - Username: playtron
     - Password: playtron
 4. Install tweaktron
-    - wget https://raw.githubusercontent.com/codename-irvin/tweaktron/v0.0.1/tweaktron
+    - wget https://tinyurl.com/2rk389ev
     - chmod +x ./tweaktron
 5. Run `./tweaktron help` to see available commands
 6. Run `./tweaktron <command>` to execute a command
