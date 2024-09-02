@@ -1,0 +1,8 @@
+[package]
+name = "tweaktron"
+version = "0.0.1"
+edition = "2021"
+
+[dependencies]
+cliclack = "0.3.4"  
+console = "0.15.8"

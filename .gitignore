@@ -1,2 +1,6 @@
 connect.sh
 copy.sh
+
+# Added by cargo
+
+/target
